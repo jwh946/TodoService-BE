@@ -2,69 +2,49 @@ package com.example.todo.service;
 
 import com.example.todo.model.TodoEntity;
 import com.example.todo.persistence.TodoRepository;
-import java.util.List;
-import java.util.Optional;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class TodoService {
+    @Autowired
+    private TodoRepository repository;
 
-    private final TodoRepository todoRepository;
-
-    public Optional<TodoEntity> create(final TodoEntity entity) {
+    public List<TodoEntity> create(final TodoEntity entity) {
         validate(entity);
-        return Optional.of(todoRepository.save(entity));
+        repository.save(entity);
+        return repository.findByUserId(entity.getUserId());
     }
-
     public List<TodoEntity> retrieve(final String userId) {
-        return todoRepository.findByUserId(userId);
+        return repository.findByUserId(userId);
     }
 
-    public Optional<TodoEntity> update(final TodoEntity entity) {
+    public List<TodoEntity> update(final TodoEntity entity) {
         validate(entity);
-        if(todoRepository.findById(entity.getId()).isPresent()){
-            todoRepository.save(entity);
-        } else{
-            throw new RuntimeException("Unknown id");
-        }
-
-        return todoRepository.findById(entity.getId());
+        if (repository.existsById(entity.getId())) {
+            repository.save(entity);
+        } else throw new RuntimeException("Unknown id");
+        return repository.findByUserId(entity.getUserId());
     }
 
-    public Optional<TodoEntity> updateTodo(final TodoEntity entity){
-        validate(entity);
-
-        final Optional<TodoEntity> original = todoRepository.findById(entity.getId());
-        original.ifPresent(todo -> {
-            todo.setTitle(entity.getTitle());
-            todo.setDone(entity.isDone());
-            todoRepository.save(todo);
-        });
-
-        return todoRepository.findById(entity.getId());
+    public List<TodoEntity> delete(final TodoEntity entity) {
+        if (repository.existsById(entity.getId())) {
+            repository.deleteById(entity.getId());
+        } else throw new RuntimeException("id does not exist");
+        return repository.findByUserId(entity.getUserId());
     }
-
-    public String delete(final String id){
-        if(todoRepository.findById(id).isPresent()){
-            todoRepository.deleteById(id);
-        } else{
-            throw new RuntimeException("id does not exist");
+    public void validate(final TodoEntity entity) {
+        if (entity == null) {
+            log.warn("Entity cannot be null.");
+            throw new RuntimeException("Entity cannot be null.");
         }
-        return "Deleted";
-    }
-
-    public void validate(final TodoEntity entity){
-        if(entity == null){
-            log.warn("Entity can not be null");
-            throw new RuntimeException("Entity can not be null");
-        }
-        if(entity.getUserId() == null){
-            log.warn("Unknown user");
-            throw new RuntimeException("Unknown user");
+        if (entity.getUserId() == null) {
+            log.warn("Unknown user.");
+            throw new RuntimeException("Unknown user.");
         }
     }
 }
