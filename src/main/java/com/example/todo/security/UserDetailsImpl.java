@@ -1,5 +1,6 @@
 package com.example.todo.security;
 
+import com.example.todo.model.UserEntity;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
@@ -8,12 +9,18 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 
 @Getter
 @AllArgsConstructor
 public class UserDetailsImpl implements UserDetails {
 
-    private final User user;
+    private final UserEntity user;
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return Collections.emptyList();
+    }
 
     @Override
     public String getPassword() {
@@ -23,18 +30,6 @@ public class UserDetailsImpl implements UserDetails {
     @Override
     public String getUsername() {
         return user.getUsername();
-    }
-
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        UserRoleEnum role = user.getRole();
-        String authority = role.getAuthority();
-
-        SimpleGrantedAuthority simpleGrantedAuthority = new SimpleGrantedAuthority(authority);
-        Collection<GrantedAuthority> authorities = new ArrayList<>();
-        authorities.add(simpleGrantedAuthority);
-
-        return authorities;
     }
 
     @Override

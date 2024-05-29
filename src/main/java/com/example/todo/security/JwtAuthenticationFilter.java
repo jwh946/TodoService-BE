@@ -1,5 +1,7 @@
 package com.example.todo.security;
 
+import com.example.todo.dto.UserDto;
+import com.example.todo.model.UserEntity;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -19,18 +21,18 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
 
 	public JwtAuthenticationFilter(JwtUtil jwtUtil) {
 		this.jwtUtil = jwtUtil;
-		setFilterProcessesUrl("/user/login");
+		setFilterProcessesUrl("/auth/signin");
 	}
 
 	@Override
 	public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
 		log.info("로그인 시도");
 		try {
-			UserRequestDto requestDto = new ObjectMapper().readValue(request.getInputStream(), UserRequestDto.class);
+			UserDto requestDto = new ObjectMapper().readValue(request.getInputStream(), UserDto.class);
 
 			return getAuthenticationManager().authenticate(
 				new UsernamePasswordAuthenticationToken(
-					requestDto.getUsername(),
+					requestDto.getEmail(),
 					requestDto.getPassword(),
 					null
 				)
@@ -44,9 +46,20 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
 	@Override
 	protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authResult) throws IOException, ServletException {
 		log.info("로그인 성공 및 JWT 생성");
-		String username = ((UserDetailsImpl) authResult.getPrincipal()).getUsername();
-		String token = jwtUtil.createToken(username);
+		UserEntity user = ((UserDetailsImpl) authResult.getPrincipal()).getUser();
+		String email = user.getEmail();
+		String token = jwtUtil.createToken(email);
 		response.addHeader(JwtUtil.AUTHORIZATION_HEADER, token);
+
+		UserDto userDto = UserDto.builder()
+				.id(user.getId())
+				.email(email)
+				.token(token)
+				.build();
+		String userDtoJson = new ObjectMapper().writeValueAsString(userDto);
+
+		response.getWriter().write(userDtoJson);
+		response.getWriter().flush();
 	}
 
 	@Override

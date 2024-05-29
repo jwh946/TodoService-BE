@@ -1,17 +1,19 @@
 package com.example.todo.dto;
 
-import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+@Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Data
-public class ResponseDto<T> {
+public class UserDto {
 
-    private String error;
-    private List<T> data;
+    private String token;
+    private String id;
+    private String username;
+    private String email;
+    private String password;
 }

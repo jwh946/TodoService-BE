@@ -2,6 +2,9 @@ package com.example.todo.common;
 
 
 import com.example.todo.security.JwtAuthenticationFilter;
+import com.example.todo.security.JwtAuthorizationFilter;
+import com.example.todo.security.JwtUtil;
+import com.example.todo.security.UserDetailsServiceImpl;
 import lombok.AllArgsConstructor;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
@@ -56,9 +59,8 @@ public class WebSecurityConfig {
         http.authorizeHttpRequests((authorizeHttpRequests) ->
             authorizeHttpRequests
                 .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
-                .requestMatchers("/user/**").permitAll() // '/user/'로 시작하는 요청 모두 접근 허가
-                .requestMatchers(HttpMethod.GET, "/feeds").permitAll()
-                .anyRequest().authenticated() // 그 외 모든 요청 인증처리
+                .requestMatchers("/auth/**", "/h2-console/**").permitAll()
+                .anyRequest().authenticated()
         );
 
         http.addFilterBefore(jwtAuthorizationFilter(), JwtAuthenticationFilter.class);
