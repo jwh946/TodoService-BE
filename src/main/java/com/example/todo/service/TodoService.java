@@ -48,13 +48,13 @@ public class TodoService {
         return todoRepository.findById(entity.getId());
     }
 
-    public String delete(final String id){
-        if(todoRepository.findById(id).isPresent()){
-            todoRepository.deleteById(id);
-        } else{
-            throw new RuntimeException("id does not exist");
+    public List<TodoEntity> delete(final TodoEntity entity) {
+        if (todoRepository.existsById(entity.getId())) {
+            todoRepository.deleteById(entity.getId());
+        } else {
+            throw new RuntimeException("Entity does not exist");
         }
-        return "Deleted";
+        return todoRepository.findByUserId(entity.getUserId());
     }
 
     public void validate(final TodoEntity entity){
