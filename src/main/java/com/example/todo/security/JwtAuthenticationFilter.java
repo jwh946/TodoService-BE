@@ -1,6 +1,6 @@
 package com.example.todo.security;
 
-import com.example.todo.dto.UserDto;
+import com.example.todo.dto.UserDTO;
 import com.example.todo.model.UserEntity;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
@@ -28,7 +28,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
 	public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
 		log.info("로그인 시도");
 		try {
-			UserDto requestDto = new ObjectMapper().readValue(request.getInputStream(), UserDto.class);
+			UserDTO requestDto = new ObjectMapper().readValue(request.getInputStream(), UserDTO.class);
 
 			return getAuthenticationManager().authenticate(
 				new UsernamePasswordAuthenticationToken(
@@ -51,7 +51,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
 		String token = jwtUtil.createToken(email);
 		response.addHeader(JwtUtil.AUTHORIZATION_HEADER, token);
 
-		UserDto userDto = UserDto.builder()
+		UserDTO userDto = UserDTO.builder()
 				.id(user.getId())
 				.email(email)
 				.token(token)

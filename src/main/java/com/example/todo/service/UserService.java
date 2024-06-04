@@ -1,6 +1,6 @@
 package com.example.todo.service;
 
-import com.example.todo.dto.UserDto;
+import com.example.todo.dto.UserDTO;
 import com.example.todo.model.UserEntity;
 import com.example.todo.persistence.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -14,16 +14,16 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class UserService {
 
-    private final UserRepository userRepository;
+    private final UserRepository repository;
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
-    public UserEntity signup(UserDto userDto) {
+    public UserEntity signup(UserDTO userDto) {
         String username = userDto.getUsername();
         String email = userDto.getEmail();
         String password = passwordEncoder.encode(userDto.getPassword());
 
-        if (userRepository.existsByEmail(email)) {
+        if (repository.existsByEmail(email)) {
             log.warn("Email already exists {}", email);
             throw new RuntimeException("Email already exists");
         }
@@ -33,6 +33,6 @@ public class UserService {
                 .email(email)
                 .password(password)
                 .build();
-        return userRepository.save(user);
+        return repository.save(user);
     }
 }

@@ -13,48 +13,48 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class TodoService {
 
-    private final TodoRepository todoRepository;
+    private final TodoRepository repository;
 
     public Optional<TodoEntity> create(final TodoEntity entity) {
         validate(entity);
-        return Optional.of(todoRepository.save(entity));
+        return Optional.of(repository.save(entity));
     }
 
     public List<TodoEntity> retrieve(final String userId) {
-        return todoRepository.findByUserId(userId);
+        return repository.findByUserId(userId);
     }
 
     public Optional<TodoEntity> update(final TodoEntity entity) {
         validate(entity);
-        if(todoRepository.findById(entity.getId()).isPresent()){
-            todoRepository.save(entity);
+        if(repository.findById(entity.getId()).isPresent()){
+            repository.save(entity);
         } else{
             throw new RuntimeException("Unknown id");
         }
 
-        return todoRepository.findById(entity.getId());
+        return repository.findById(entity.getId());
     }
 
     public Optional<TodoEntity> updateTodo(final TodoEntity entity){
         validate(entity);
 
-        final Optional<TodoEntity> original = todoRepository.findById(entity.getId());
+        final Optional<TodoEntity> original = repository.findById(entity.getId());
         original.ifPresent(todo -> {
             todo.setTitle(entity.getTitle());
             todo.setDone(entity.isDone());
-            todoRepository.save(todo);
+            repository.save(todo);
         });
 
-        return todoRepository.findById(entity.getId());
+        return repository.findById(entity.getId());
     }
 
     public List<TodoEntity> delete(final TodoEntity entity) {
-        if (todoRepository.existsById(entity.getId())) {
-            todoRepository.deleteById(entity.getId());
+        if (repository.existsById(entity.getId())) {
+            repository.deleteById(entity.getId());
         } else {
             throw new RuntimeException("Entity does not exist");
         }
-        return todoRepository.findByUserId(entity.getUserId());
+        return repository.findByUserId(entity.getUserId());
     }
 
     public void validate(final TodoEntity entity){
