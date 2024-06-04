@@ -1,63 +1,44 @@
 package com.example.todo.controller;
 
-import com.example.todo.dto.ResponseDTO;
 import com.example.todo.dto.UserDTO;
 import com.example.todo.model.UserEntity;
-import com.example.todo.security.TokenProvider;
 import com.example.todo.service.UserService;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.stereotype.Controller;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 
-@CrossOrigin(origins = "*")
+import java.util.List;
+
 @Slf4j
-@RestController
+@Controller
+@AllArgsConstructor
 @RequestMapping("/auth")
 public class UserController {
-    @Autowired
-    private UserService userService;
-    @Autowired
-    private TokenProvider tokenProvider;
-    private PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+
+    private final UserService service;
 
     @PostMapping("/signup")
-    public ResponseEntity<?> registerUser(@RequestBody UserDTO userDTO) {
-        try {
-            UserEntity user = UserEntity.builder()
-                    .email(userDTO.getEmail())
-                    .username(userDTO.getUsername())
-                    .password(passwordEncoder.encode(userDTO.getPassword()))
-                    .build();
-            UserEntity registeredUser = userService.create(user);
-            UserDTO responseUserDTO = userDTO.builder()
-                    .email(registeredUser.getEmail())
-                    .id(registeredUser.getId())
-                    .username(registeredUser.getUsername())
-                    .build();
-            return ResponseEntity.ok().body(responseUserDTO);
-        } catch (Exception e) {
-            ResponseDTO<Object> responseDTO = ResponseDTO.builder().error(e.getMessage()).build();
-            return ResponseEntity.badRequest().body(responseDTO);
-        }
-    }
+    public ResponseEntity<?> signup(@RequestBody UserDTO userDto, BindingResult bindingResult) {
 
-    @PostMapping("/signin")
-    public ResponseEntity<?> authenticate(@RequestBody UserDTO userDTO) {
-        UserEntity user = userService.getByCredentials(userDTO.getEmail(), userDTO.getPassword(), passwordEncoder);
-        if (user != null) {
-            final String token = tokenProvider.create(user);
-            final UserDTO responseUserDTO = UserDTO.builder()
-                    .email(user.getEmail())
-                    .id(user.getId())
-                    .token(token)
-                    .build();
-            return ResponseEntity.ok().body(responseUserDTO);
-        } else {
-            ResponseDTO<Object> responseDTO = ResponseDTO.builder().error("Login failed").build();
-            return ResponseEntity.badRequest().body(responseDTO);
+        List<FieldError> fieldErrors = bindingResult.getFieldErrors();
+        if(!fieldErrors.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("signup error");
         }
+
+        UserEntity user = service.signup(userDto);
+        UserDTO responseUserDTO = UserDTO.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .build();
+
+        return ResponseEntity.ok().body(responseUserDTO);
     }
 }

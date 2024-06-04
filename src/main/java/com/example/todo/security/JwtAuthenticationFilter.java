@@ -1,53 +1,71 @@
 package com.example.todo.security;
 
+import com.example.todo.dto.UserDTO;
+import com.example.todo.model.UserEntity;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.AuthorityUtils;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
-import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
-import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import java.io.IOException;
 
-@Slf4j
-@Component
-public class JwtAuthenticationFilter extends OncePerRequestFilter {
-    @Autowired
-    private TokenProvider tokenProvider;
+@Slf4j(topic = "로그인 및 JWT 생성")
+public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
+	private final JwtUtil jwtUtil;
 
-    @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        try {
-            String token = parseBearerToken(request);
-            log.info("Filter is running...");
-            if (token != null && !token.equalsIgnoreCase("null")) {
-                String userId = tokenProvider.validateAndGetUserId(token);
-                log.info("Authenticated user ID : " + userId);
-                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userId, null, AuthorityUtils.NO_AUTHORITIES);
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
-                securityContext.setAuthentication(authentication);
-                SecurityContextHolder.setContext(securityContext);
-            }
-        } catch (Exception e) {
-            logger.error("Could not set user authentication in security context", e);
-        }
-        filterChain.doFilter(request, response);
-    }
+	public JwtAuthenticationFilter(JwtUtil jwtUtil) {
+		this.jwtUtil = jwtUtil;
+		setFilterProcessesUrl("/auth/signin");
+	}
 
-    private String parseBearerToken(HttpServletRequest request) {
-        String bearerToken = request.getHeader("Authorization");
-        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer")) {
-            return bearerToken.substring(7);
-        }
-        return null;
-    }
+	@Override
+	public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
+		log.info("로그인 시도");
+		try {
+			UserDTO requestDto = new ObjectMapper().readValue(request.getInputStream(), UserDTO.class);
+
+			return getAuthenticationManager().authenticate(
+				new UsernamePasswordAuthenticationToken(
+					requestDto.getEmail(),
+					requestDto.getPassword(),
+					null
+				)
+			);
+		} catch (IOException e) {
+			log.error(e.getMessage());
+			throw new RuntimeException(e.getMessage());
+		}
+	}
+
+	@Override
+	protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authResult) throws IOException, ServletException {
+		log.info("로그인 성공 및 JWT 생성");
+		UserEntity user = ((UserDetailsImpl) authResult.getPrincipal()).getUser();
+		String email = user.getEmail();
+		String token = jwtUtil.createToken(email);
+		response.addHeader(JwtUtil.AUTHORIZATION_HEADER, token);
+
+		UserDTO userDto = UserDTO.builder()
+				.id(user.getId())
+				.email(email)
+				.token(token)
+				.build();
+		String userDtoJson = new ObjectMapper().writeValueAsString(userDto);
+
+		response.getWriter().write(userDtoJson);
+		response.getWriter().flush();
+	}
+
+	@Override
+	protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, AuthenticationException failed) throws IOException, ServletException {
+		log.info("로그인 실패");
+		response.setStatus(400);
+		response.getWriter().write("login failed");
+	}
 }
