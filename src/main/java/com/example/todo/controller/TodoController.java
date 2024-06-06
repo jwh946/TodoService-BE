@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
@@ -51,6 +53,18 @@ public class TodoController {
         List<TodoEntity> entities = service.retrieve(userDetails.getUser().getId());
         List<TodoDTO> dtos = entities.stream().map(TodoDTO::new).toList();
         ResponseDTO<TodoDTO> response = ResponseDTO.<TodoDTO>builder().data(dtos).build();
+        return ResponseEntity.ok().body(response);
+    }
+
+    @GetMapping("/page")
+    public ResponseEntity<Page<TodoDTO>> getTodoPage(
+        @RequestParam("page") int page,
+        @RequestParam("size") int size,
+        @RequestParam("sort") String sort,
+        @AuthenticationPrincipal UserDetailsImpl userDetails){
+
+        Page<TodoDTO> response = service.getTodoPage(page - 1, size, sort, userDetails.getUser().getId());
+
         return ResponseEntity.ok().body(response);
     }
 

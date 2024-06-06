@@ -1,11 +1,17 @@
 package com.example.todo.service;
 
+import com.example.todo.dto.TodoDTO;
 import com.example.todo.model.TodoEntity;
 import com.example.todo.persistence.TodoRepository;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -22,6 +28,15 @@ public class TodoService {
 
     public List<TodoEntity> retrieve(final String userId) {
         return repository.findByUserId(userId);
+    }
+
+    public Page<TodoDTO> getTodoPage(int page, int size, String sortStr, String userId) {
+
+        Sort sort = Sort.by(Direction.DESC, sortStr);
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Page<TodoEntity> todoPage = repository.findByUserId(userId, pageable);
+
+        return todoPage.map(TodoDTO::new);
     }
 
     public Optional<TodoEntity> update(final TodoEntity entity) {
