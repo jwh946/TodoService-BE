@@ -63,7 +63,7 @@ public class TodoController {
         @RequestParam("sort") String sort,
         @AuthenticationPrincipal UserDetailsImpl userDetails){
 
-        Page<TodoDTO> response = service.getTodoPage(page - 1, size, sort, userDetails.getUser().getId());
+        Page<TodoDTO> response = service.getTodoPage(page, size, sort, userDetails.getUser().getId());
 
         return ResponseEntity.ok().body(response);
     }
