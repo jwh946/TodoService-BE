@@ -5,8 +5,8 @@ import com.example.todo.persistence.TodoRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -46,5 +46,15 @@ public class TodoService {
             log.warn("Unknown user.");
             throw new RuntimeException("Unknown user.");
         }
+    }
+    public List<TodoEntity> deleteBatch(final String userId, final List<String> todoIds) {
+        // 삭제할 항목들을 조회합니다.
+        List<TodoEntity> entitiesToDelete = repository.findAllById(todoIds);
+
+        // 조회된 항목들을 삭제합니다.
+        repository.deleteAll(entitiesToDelete);
+
+        // 해당 사용자의 업데이트된 할일 목록을 반환합니다.
+        return repository.findByUserId(userId);
     }
 }
