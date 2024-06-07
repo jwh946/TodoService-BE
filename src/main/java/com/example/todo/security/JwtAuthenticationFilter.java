@@ -49,17 +49,19 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
 		UserEntity user = ((UserDetailsImpl) authResult.getPrincipal()).getUser();
 		String email = user.getEmail();
 		String token = jwtUtil.createToken(email);
-		response.addHeader(JwtUtil.AUTHORIZATION_HEADER, token);
+		token = token.substring(7);
 
-		UserDTO userDto = UserDTO.builder()
+		UserDTO userDTO = UserDTO.builder()
 				.id(user.getId())
 				.email(email)
 				.token(token)
 				.build();
-		String userDtoJson = new ObjectMapper().writeValueAsString(userDto);
+		ObjectMapper objectMapper = new ObjectMapper();
+		String userDTOJson = objectMapper.writeValueAsString(userDTO);
 
-		response.getWriter().write(userDtoJson);
-		response.getWriter().flush();
+		response.addHeader(JwtUtil.AUTHORIZATION_HEADER, token);
+		response.setContentType("application/json");
+		response.getWriter().write(userDTOJson);
 	}
 
 	@Override
