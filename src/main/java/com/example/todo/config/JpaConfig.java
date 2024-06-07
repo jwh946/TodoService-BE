@@ -1,4 +1,4 @@
-package com.example.todo.common;
+package com.example.todo.config;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;

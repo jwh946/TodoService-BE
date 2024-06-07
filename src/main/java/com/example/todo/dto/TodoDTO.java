@@ -1,7 +1,6 @@
 package com.example.todo.dto;
 
 import com.example.todo.model.TodoEntity;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -24,11 +23,11 @@ public class TodoDTO {
         this.done = entity.isDone();
         this.createdAt = entity.getCreatedAt();
     }
-
-    public static TodoEntity toEntity(final TodoDTO dto) {
+    public static TodoEntity toEntity(final TodoDTO dto){
         return TodoEntity.builder()
                 .id(dto.getId())
                 .title(dto.getTitle())
-                .done(dto.isDone()).build();
+                .done(dto.isDone())
+                .build();
     }
 }
