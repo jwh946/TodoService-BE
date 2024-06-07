@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.data.domain.Page;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -43,6 +43,7 @@ public class TodoController {
             return ResponseEntity.badRequest().body(response);
         }
     }
+
     @GetMapping
     public ResponseEntity<?> retrieveTodo(@AuthenticationPrincipal String userId) {
         List<TodoEntity> entities = service.retrieve(userId);
@@ -50,6 +51,20 @@ public class TodoController {
         ResponseDTO<TodoDTO> response = ResponseDTO.<TodoDTO>builder().data(dtos).build();
         return ResponseEntity.ok().body(response);
     }
+
+
+    @GetMapping("/page")
+    public ResponseEntity<Page<TodoDTO>> getTodoPage(
+        @RequestParam("page") int page,
+        @RequestParam("size") int size,
+        @RequestParam("sort") String sort,
+        @AuthenticationPrincipal String userId){
+
+        Page<TodoDTO> response = service.getTodoPage(page, size, sort, userId);
+
+        return ResponseEntity.ok().body(response);
+    }
+
     @PutMapping
     public ResponseEntity<?> updateTodo(@AuthenticationPrincipal String userId, @RequestBody TodoDTO dto) {
         try {
