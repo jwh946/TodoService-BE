@@ -1,6 +1,6 @@
 package com.example.todo.controller;
 
-import com.example.todo.dto.UserDto;
+import com.example.todo.dto.UserDTO;
 import com.example.todo.model.UserEntity;
 import com.example.todo.service.UserService;
 import lombok.AllArgsConstructor;
@@ -22,23 +22,23 @@ import java.util.List;
 @RequestMapping("/auth")
 public class UserController {
 
-    private final UserService userService;
+    private final UserService service;
 
     @PostMapping("/signup")
-    public ResponseEntity<?> signup(@RequestBody UserDto userDto, BindingResult bindingResult) {
+    public ResponseEntity<?> signup(@RequestBody UserDTO userDto, BindingResult bindingResult) {
 
         List<FieldError> fieldErrors = bindingResult.getFieldErrors();
         if(!fieldErrors.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("signup error");
         }
 
-        UserEntity user = userService.signup(userDto);
-        UserDto responseUserDto = UserDto.builder()
+        UserEntity user = service.signup(userDto);
+        UserDTO responseUserDTO = UserDTO.builder()
                 .id(user.getId())
                 .username(user.getUsername())
                 .email(user.getEmail())
                 .build();
 
-        return ResponseEntity.ok().body(responseUserDto);
+        return ResponseEntity.ok().body(responseUserDTO);
     }
 }
